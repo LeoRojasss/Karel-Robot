@@ -9,8 +9,8 @@ public class MiPrimerRobot implements Directions {
     static Color colorExtractor = new Color(255, 0, 0);
 
     private static int numMineros = 2; // Valor predeterminado
-    private static int numTrenes = 2; // Valor predeterminado
-    private static int numExtractores = 2; // Valor predeterminado
+    private static int numTrenes = 0; // Valor predeterminado
+    private static int numExtractores = 0; // Valor predeterminado
 
     // Semáforo para controlar el acceso a la entrada de la mina
     private static final Semaphore controlAccesoMina = new Semaphore(1);
@@ -38,29 +38,31 @@ public class MiPrimerRobot implements Directions {
         World.setVisible(true);
         World.setDelay(20);
 
+        // Calle inicial para cada tipo de robot
+        int calleInicialMinero = 10;
+        int calleInicialTren = 12; // Incrementamos la calle para los trenes
+        int calleInicialExtractor = 14; // Incrementamos aún más para los extractores
+
         // Crear e iniciar robots fuera de la mina
-        iniciarRobots("Minero", numMineros, colorMinero);
-        iniciarRobots("Tren", numTrenes, colorTren);
-        iniciarRobots("Extractor", numExtractores, colorExtractor);
+        iniciarRobots("Minero", numMineros, colorMinero, calleInicialMinero);
+        iniciarRobots("Tren", numTrenes, colorTren, calleInicialTren);
+        iniciarRobots("Extractor", numExtractores, colorExtractor, calleInicialExtractor);
     }
 
-    
-    private static void iniciarRobots(String tipo, int cantidad, Color color) {
-        int calleInicial = 10; // Calle inicial para el primer tipo de robot.
-    
+    private static void iniciarRobots(String tipo, int cantidad, Color color, int calleInicial) {
         for (int i = 0; i < cantidad; i++) {
             switch (tipo) {
                 case "Minero":
                     // Mineros en la calle 10
-                    new Thread(new Minero(calleInicial, 1 + i, East, 0, color, controlAccesoMina)).start();
+                    new Thread(new Minero(calleInicial, 1 + i, East, 0, color)).start();
                     break;
                 case "Tren":
-                    // Trenes en la calle 11
-                    new Thread(new Tren(calleInicial + 1, 1 + i, East, 0, color, controlAccesoMina)).start();
+                    // Trenes en la calle 12
+                    new Thread(new Tren(calleInicial, 1 + i, East, 0, color)).start();
                     break;
                 case "Extractor":
-                    // Extractores en la calle 12
-                    new Thread(new Extractor(calleInicial + 2, 1 + i, East, 0, color, controlAccesoMina)).start();
+                    // Extractores en la calle 14
+                    new Thread(new Extractor(calleInicial, 1 + i, East, 0, color)).start();
                     break;
                 default:
                     throw new IllegalArgumentException("Tipo de robot no reconocido.");
