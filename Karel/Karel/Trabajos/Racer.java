@@ -1,9 +1,12 @@
 import kareltherobot.*;
 import java.awt.Color;
+import java.util.concurrent.Semaphore;
 
 public class Racer extends Robot implements Runnable {
-    public Racer(int street, int avenue, Direction direction, int beepers, Color color) {
-        super(street, avenue, direction, beepers,color);     
+    protected Semaphore semaforoAcceso;
+    public Racer(int street, int avenue, Direction direction, int beepers, Color colorRobot, Semaphore semaforo) {
+        super(street, avenue, direction, beepers,colorRobot);     
+        this.semaforoAcceso = semaforo;
     }
 
     @Override
@@ -13,8 +16,8 @@ public class Racer extends Robot implements Runnable {
 }
 
 class Minero extends Racer {
-    public Minero(int street, int avenue, Direction direction, int beepers, Color color) {
-        super(street, avenue, direction, beepers, color);
+    public Minero(int street, int avenue, Direction direction, int beepers, Color colorRobot, Semaphore semaforo) {
+        super(street, avenue, direction, beepers, colorRobot, semaforo);
     }
 
     @Override
@@ -24,21 +27,17 @@ class Minero extends Racer {
 }
 
 class Tren extends Racer {
-    public Tren(int street, int avenue, Direction direction, int beepers, Color color) {
-        super(street, avenue, direction, beepers, color);
+    public Tren(int street, int avenue, Direction direction, int beepers, Color colorRobot, Semaphore semaforo){
+        super(street, avenue, direction, beepers, colorRobot,semaforo);
     }
 
-    @Override
-    public void run() {
-        // Lógica específica del tren
-    }
+    
 }
 
 class Extractor extends Racer {
-    public Extractor(int street, int avenue, Direction direction, int beepers, Color color) {
-        super(street, avenue, direction, beepers, color);
+    public Extractor(int street, int avenue, Direction direction, int beepers, Color colorRobot, Semaphore semaforo){
+        super(street, avenue, direction, beepers, colorRobot,semaforo);
     }
-
     @Override
     public void run() {
         // Lógica específica del extractor
