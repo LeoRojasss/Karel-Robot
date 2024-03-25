@@ -9,8 +9,8 @@ public class MiPrimerRobot implements Directions {
     static Color colorExtractor = new Color(255, 0, 0);
 
     private static int numMineros = 2; // Valor predeterminado
-    private static int numTrenes = 0; // Valor predeterminado
-    private static int numExtractores = 0; // Valor predeterminado
+    private static int numTrenes = 2; // Valor predeterminado
+    private static int numExtractores = 2; // Valor predeterminado
 
     // Semáforo para controlar el acceso a la entrada de la mina
     private static final Semaphore controlAccesoMina = new Semaphore(1);
@@ -36,7 +36,7 @@ public class MiPrimerRobot implements Directions {
         // Configuración inicial del mundo
         World.readWorld("Mundo.kwld");
         World.setVisible(true);
-        World.setDelay(20);
+        World.setDelay(15);
 
         // Calle inicial para cada tipo de robot
         int calleInicialMinero = 10;
@@ -53,16 +53,16 @@ public class MiPrimerRobot implements Directions {
         for (int i = 0; i < cantidad; i++) {
             switch (tipo) {
                 case "Minero":
-                    // Mineros en la calle 10
-                    new Thread(new Minero(calleInicial, 1 + i, East, 0, color)).start();
+                    // Mineros colocados verticalmente en calles consecutivas, comenzando en calleInicial
+                    new Thread(new Minero(calleInicial + i, 1, South, 0, color)).start();
                     break;
                 case "Tren":
-                    // Trenes en la calle 12
-                    new Thread(new Tren(calleInicial, 1 + i, East, 0, color)).start();
+                    // Trenes colocados verticalmente en calles consecutivas, ajusta según necesidad
+                    new Thread(new Tren(calleInicial + i, 1, South,  0, color)).start();
                     break;
                 case "Extractor":
-                    // Extractores en la calle 14
-                    new Thread(new Extractor(calleInicial, 1 + i, East, 0, color)).start();
+                    // Extractores colocados verticalmente en calles consecutivas, ajusta según necesidad
+                    new Thread(new Extractor(calleInicial + i, 1, South, 0, color)).start();
                     break;
                 default:
                     throw new IllegalArgumentException("Tipo de robot no reconocido.");
