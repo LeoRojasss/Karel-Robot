@@ -62,7 +62,7 @@ public class MiPrimerRobot implements Directions {
                     break;
                 case "Extractor":
                     // Extractores colocados verticalmente en calles consecutivas, ajusta según necesidad
-                    new Thread(new Extractor(calleInicial + i, 1, South, 0, color)).start();
+                    new Thread(new Extractor(calleInicial + i, 1, South, 0, color,0)).start();
                     break;
                 default:
                     throw new IllegalArgumentException("Tipo de robot no reconocido.");

@@ -75,7 +75,6 @@ public class Racer extends Robot implements Runnable {
         private static int menasAcabadas = 0;
         private static int minaDejada = 0;
         private Semaphore semaforoPosicionCritica;
-        private static boolean dentroSeccionCritica = false;
     
         public Minero(int street, int avenue, Direction direction, int beepers, Color colorRobot) {
             super(street, avenue, direction, beepers, colorRobot);
@@ -83,10 +82,10 @@ public class Racer extends Robot implements Runnable {
             World.setupThread(this);
         }
     
-        protected void soltar() {
+        protected void  soltar(){
             moveX(menasAcabadas + 1);
-            if (anyBeepersInBeeperBag()) {
-                for (int i = 0; i < 50; i++) {
+            if (anyBeepersInBeeperBag()) {            
+                for (int i=0; i<50;i++){
                     putBeeper();
                     minaDejada = minaDejada + 1;
                 }
@@ -132,14 +131,14 @@ public class Racer extends Robot implements Runnable {
                 moveF();
                 orientNorth();
             }
-    
-            while ((minaActual <= 200) && (menasAcabadas < 3)) {
+            
+            while ((minaActual <= 200) && (menasAcabadas <3 )) {
                 System.out.println("entro al while");
                 segundoLock.lock();
                 try {
                     if (minaActual < 200) {
                         if (primerMinero == false) {
-                            for (int i = 0; i < 50; i++) {
+                            for (int i=0; i<50;i++){
                                 pickBeeper();
                                 minaActual = minaActual + 1;
                             }
@@ -147,80 +146,71 @@ public class Racer extends Robot implements Runnable {
                             orientWest();
                             soltar();
                             orientEast();
-                            moveF();
-                            try {
-                                Thread.sleep(500); // Dormir el hilo por un tiempo antes de entrar en la sección crítica
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt(); // Restablece el estado de interrupción
-                                System.out.println("El hilo del Minero fue interrumpido mientras dormía.");
-                            }
                             try {
                                 semaforoPosicionCritica.acquire();
-                                dentroSeccionCritica = true;
                                 System.out.println("Minero adquiere la posición crítica (14, 10)");
-                                // Sección crítica
-                                orientNorth();
+                                orientEast(); 
+                            
+                                
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt(); // Restablece el estado de interrupción
                                 System.out.println("El hilo del Minero fue interrumpido.");
                             } finally {
-                                dentroSeccionCritica = false;
                                 semaforoPosicionCritica.release();
                                 System.out.println("Minero libera la posición crítica (14, 10)");
                             }
+                            moveF();
                             orientNorth();
-                        } else {
+                        } else{
                             primerLock.lock();
+                            try{
+                            moveF();
+                            orientEast();
+                            moveX(menasAcabadas);
+                            for (int i=0; i<50;i++){
+                                pickBeeper();
+                                minaActual = minaActual +1;
+                            }
+                            orientWest();
+                            soltar();
+                            
                             try {
-                                moveF();
-                                orientEast();
-                                moveX(menasAcabadas);
-                                for (int i = 0; i < 50; i++) {
-                                    pickBeeper();
-                                    minaActual = minaActual + 1;
-                                }
-                                orientWest();
-                                soltar();
-                                moveF();
-                                try {
-                                    Thread.sleep(500); // Dormir el hilo por un tiempo antes de entrar en la sección crítica
-                                } catch (InterruptedException e) {
-                                    Thread.currentThread().interrupt(); // Restablece el estado de interrupción
-                                    System.out.println("El hilo del Minero fue interrumpido mientras dormía.");
-                                }
-                                try {
-                                    semaforoPosicionCritica.acquire();
-                                    dentroSeccionCritica = true;
-                                    System.out.println("Minero adquiere la posición crítica (14, 10)");
-                                    // Sección crítica
-                                    orientNorth();
-                                } catch (InterruptedException e) {
-                                    Thread.currentThread().interrupt(); // Restablece el estado de interrupción
-                                    System.out.println("El hilo del Minero fue interrumpido.");
-                                } finally {
-                                    dentroSeccionCritica = false;
-                                    semaforoPosicionCritica.release();
-                                    System.out.println("Minero libera la posición crítica (14, 10)");
-                                }
+                                semaforoPosicionCritica.acquire();
+                                System.out.println("Minero adquiere la posición crítica (14, 10)");
+                                
+                            orientEast();
+                                
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt(); // Restablece el estado de interrupción
+                                System.out.println("El hilo del Minero fue interrumpido.");
                             } finally {
+                                semaforoPosicionCritica.release();
+                                System.out.println("Minero libera la posición crítica (14, 10)");
+                            }
+                            moveF();
+                            orientNorth();
+                            }finally{
                                 primerLock.unlock();
                             }
                         }
-                    } else {
+                    } else{
                         System.out.println("Cambio de mena");
                         menasAcabadas = menasAcabadas + 1;
                         minaActual = 0;
                         if (menasAcabadas == 3) {
                             System.out.println("Todas las menas han sido minadas.");
+                            
                             break;
                         }
                     }
                 } finally {
                     System.out.println("CAMBIO");
                     segundoLock.unlock();
+                    
                 }
             }
         }
+
     
 
     public void liberarPosicion() {
@@ -241,7 +231,6 @@ class Tren extends Racer {
     private static boolean extractorListo = false;
     private static CountDownLatch extractorListoLatch = new CountDownLatch(1); // Latch para señalizar al tren
     private static boolean primerTren = true;
-
 
     public Tren(int street, int avenue, Direction direction, int beepers, Color colorRobot){
         super(street, avenue, direction, beepers, colorRobot);
@@ -312,10 +301,13 @@ class Extractor extends Racer {
     private static final int RETRASO_EXTRACTOR = 5000; // Retraso en milisegundos (ajusta según sea necesario)
     private static Lock primerLock = new ReentrantLock();
     private static boolean primerExtractor = true;
+    private static int beepersRecogidos = 0;
+    private int numeroExtractor;
 
     
-    public Extractor(int street, int avenue, Direction direction, int beepers, Color colorRobot){
+    public Extractor(int street, int avenue, Direction direction, int beepers, Color colorRobot, int numeroExtractor){
         super(street, avenue, direction, beepers, colorRobot);
+        this.numeroExtractor=numeroExtractor;
     }
 
 
@@ -356,13 +348,30 @@ class Extractor extends Racer {
         if (primerExtractor) {
             moveF();
             orientEast();
-            moveX(1);
+            moveX(2);
             primerExtractor = false;
         }else{
             moveX(2);
         }
-
-        
-        
+        for (int i = 0; i < 50 && beepersRecogidos < 12000; i++) {
+            if (nextToABeeper()) {
+                pickBeeper();
+                beepersRecogidos++;
+            } else {
+                break;
+            }
+        }
+        orientWest();
+        moveF();
+        turnRight();
+        moveF();
+        turnRight();
+        moveF();
+        turnLeft();
+        move(); 
+        while(anyBeepersInBeeperBag() == true ) {
+            putBeeper();
+            
+        }
     }
 }
