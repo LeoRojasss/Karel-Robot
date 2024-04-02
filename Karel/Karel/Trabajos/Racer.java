@@ -55,16 +55,12 @@ public class Racer extends Robot implements Runnable {
     }
 
 class semaforos {
-    public static Semaphore semaforo_trenes_vertical_1 = new Semaphore(1); // Inicialmente permite un tren
-    public static Semaphore semaforo_trenes_horizontal_3 = new Semaphore(0); // Inicialmente permite un tren
-
-    // Sector 2
+    public static Semaphore semaforoTrenIda = new Semaphore(1);
+    public static Semaphore semaforoTrenVenida = new Semaphore(0); 
     public static Semaphore semaforoMinero = new Semaphore(1);
     public static Semaphore semaforoTrenMinero = new Semaphore(0);
-
-    // Sector 4
-    public static Semaphore semaforo_trenes_4 = new Semaphore(1);
-    public static Semaphore semaforo_extractores_4 = new Semaphore(0);
+    public static Semaphore semaforoTrenExtractor = new Semaphore(1);
+    public static Semaphore semaforoExtractorTren = new Semaphore(0);
 }
 
     class Minero extends Racer {
@@ -108,9 +104,7 @@ class semaforos {
                 moveF();
             } finally {
                 primerLock.unlock();
-                // Indicar al tren que puede moverse
                 trenListo = true;
-                // Señalizar al tren que puede moverse
                 trenListoLatch.countDown();
             }
             orientWest();
@@ -135,7 +129,7 @@ class semaforos {
                 orientNorth();
             }
             
-            while ((minaActual <= 200) && (menasAcabadas <10 )) {
+            while ((minaActual <= 200) && (menasAcabadas <7 )) {
                 System.out.println("entro al while");
                 if (minaActual < 200) {
                     if (identificador == 1){
@@ -158,14 +152,13 @@ class semaforos {
                                     minaActual = minaActual + 1;
                                 }
                                 orientWest();
-                                moveX(1);
                             }
                             try {
                                 semaforos.semaforoMinero.acquire();
                                 soltar();
                                 System.out.println("el minero se mueve por el semaforo");
                             } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt(); // Restablece el estado de interrupción
+                                Thread.currentThread().interrupt();
                                 System.out.println("El hilo del Minero fue interrumpido.");
                             } finally {
                                 semaforos.semaforoTrenMinero.release();
@@ -193,7 +186,7 @@ class semaforos {
                                 soltar();
                                 System.out.println("el minero se mueve por el semaforo");
                             } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt(); // Restablece el estado de interrupción
+                                Thread.currentThread().interrupt();
                                 System.out.println("El hilo del Minero fue interrumpido.");
                             } finally {
                                 semaforos.semaforoTrenMinero.release();
@@ -210,7 +203,7 @@ class semaforos {
                     System.out.println("Cambio de mena");
                         menasAcabadas = menasAcabadas + 1;
                         minaActual = 0;
-                        if (menasAcabadas == 10) {
+                        if (menasAcabadas == 6) {
                             System.out.println("Todas las menas han sido minadas.");
                             break;
                         }
@@ -274,23 +267,23 @@ class Tren extends Racer {
         orientSouth();
         moveF();
         orientEast();
-        primerLock.lock();
-        if (primerTren) {
+        moveX(2);
+        
+        while (true) {
             moveF();
             orientNorth();
+            moveX(4);
+            try{
+                semaforos.semaforoTrenIda.acquire();
+                moveX(2);
+            }catch(InterruptedException e){
+                e.printStackTrace();
+            }finally{
+                semaforos.semaforoTrenVenida.release();
+            }
             moveF();
             orientEast();
             moveX(4);
-            primerTren = false;
-            primerLock.unlock();
-        }else{
-            moveF();
-            orientNorth();
-            moveX(4);;
-        }
-        
-        while (true) {
-            
             try {       // Semáforo para recoger beepers extraídos por Mineros
                 semaforos.semaforoTrenMinero.acquire(); // Conseguir la luz verde del semaforo
                 System.out.println("el tren adquiere el semaforo");
@@ -308,6 +301,30 @@ class Tren extends Racer {
         moveF();
         orientWest();
         moveX(4);
+        try {
+            semaforos.semaforoTrenVenida.acquire();
+            moveX(2); // AvanzarF
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            semaforos.semaforoTrenIda.release();
+        }
+        moveF();
+        orientSouth();
+        moveF();
+        try {
+            semaforos.semaforoTrenExtractor.acquire();
+            while (anyBeepersInBeeperBag()) { // Entregar todos los beepers que carga en el punto de recoleccion
+                putBeeper();
+            }
+            orientEast();
+            moveF();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            semaforos.semaforoExtractorTren.release();
+        }
+
     }
 }
 
@@ -322,6 +339,8 @@ class Extractor extends Racer {
     private static Lock primerLock = new ReentrantLock();
     private static boolean primerExtractor = true;
     private static int beepersRecogidos = 0;
+    private static int bodegasLlenas = 0;
+    private static int bodega = 0;
     private int numeroExtractor;
 
     
@@ -329,7 +348,6 @@ class Extractor extends Racer {
         super(street, avenue, direction, beepers, colorRobot);
         this.numeroExtractor=numeroExtractor;
     }
-
 
 
     @Override
@@ -364,34 +382,49 @@ class Extractor extends Racer {
         orientWest();
         moveF();
         orientSouth();
+        moveF();
+        orientEast();
+        moveX(1);
 
-        if (primerExtractor) {
+        while (true) {
+            try {
+                semaforos.semaforoExtractorTren.acquire();
+                moveX(1); // AvanzarF
+                for (int i=0; i<50;i++){
+                    pickBeeper();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                semaforos.semaforoTrenExtractor.release();
+            }
+            orientWest();
+            moveF();
+            orientNorth();
             moveF();
             orientEast();
-            moveX(2);
-            primerExtractor = false;
-        }else{
-            moveX(2);
-        }
-        for (int i = 0; i < 50 && beepersRecogidos < 12000; i++) {
-            if (nextToABeeper()) {
-                pickBeeper();
-                beepersRecogidos++;
-            } else {
-                break;
+            moveF();
+            orientNorth();
+            moveX(1);
+            orientEast();
+            moveX(1);
+            orientSouth();
+            moveF();
+            while (anyBeepersInBeeperBag()) { // Entregar todos los beepers que carga en el punto de recoleccion
+                putBeeper();
             }
-        }
-        orientWest();
-        moveF();
-        orientEast();
-        moveF();
-        orientEast();
-        moveF();
-        orientWest();
-        moveX(2); 
-        while(anyBeepersInBeeperBag() == true ) {
-            putBeeper();
-            
+            orientNorth();
+            moveX(2);
+            orientWest();
+            moveX(1);
+            orientSouth();
+            moveF();
+            orientWest();
+            moveF();
+            orientSouth();
+            moveF();
+            orientEast();
+            moveX(1);
         }
     }
 }

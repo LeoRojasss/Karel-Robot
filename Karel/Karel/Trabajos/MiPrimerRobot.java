@@ -35,7 +35,7 @@ public class MiPrimerRobot implements Directions {
         // Configuración inicial del mundo
         World.readWorld("Mundo.kwld");
         World.setVisible(true);
-        World.setDelay(20);
+        World.setDelay(10);
         ControlDeColisiones.inicializarPosicion(14, 10);
         
         // Calle inicial para cada tipo de robot
