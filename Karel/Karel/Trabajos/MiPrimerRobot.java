@@ -54,7 +54,7 @@ public class MiPrimerRobot implements Directions {
             switch (tipo) {
                 case "Minero":
                     // Mineros colocados verticalmente en calles consecutivas, comenzando en calleInicial
-                    new Thread(new Minero(calleInicial + i, 1, South, 0, color)).start();
+                    new Thread(new Minero(calleInicial + i, 1, South, 0, color, i + 1)).start();
                     break;
                 case "Tren":
                     // Trenes colocados verticalmente en calles consecutivas, ajusta según necesidad

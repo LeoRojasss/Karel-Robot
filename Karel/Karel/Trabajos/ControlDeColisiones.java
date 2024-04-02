@@ -3,7 +3,7 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 public class ControlDeColisiones {
-    private static final Map<String, Semaphore> semaforosPorPosicion = new HashMap<>();
+    public static final Map<String, Semaphore> semaforosPorPosicion = new HashMap<>();
 
     public static synchronized void inicializarPosicion(int x, int y) {
         String clave = posicionClave(x, y);
@@ -17,7 +17,7 @@ public class ControlDeColisiones {
         return semaforosPorPosicion.get(clave);
     }
 
-    private static String posicionClave(int x, int y) {
+    public static String posicionClave(int x, int y) {
         return x + "," + y;
     }
 }
